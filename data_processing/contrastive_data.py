@@ -1,10 +1,7 @@
 import math
-
 import torch
 from torch.utils.data import Dataset
 from torchvision import datasets, transforms
-
-from main import args, kwargs
 
 
 class UnlabeledDataset(Dataset):
@@ -21,11 +18,13 @@ class UnlabeledDataset(Dataset):
         return item
 
 
-class ContrastiveData():
+class ContrastiveData:
     '''Takes care of data for contrastive purposes'''
 
-    def __init__(self, dataset_name="MNIST"):
+    def __init__(self, args, dataset_name="MNIST", **kwargs):
         # Import train data
+        self.args = args
+        self.kwargs = kwargs
         train_data = None
         test_data = None
         if dataset_name == "MNIST":
@@ -52,12 +51,12 @@ class ContrastiveData():
     def get_data_loaders(self):
         '''Get data loaders'''
 
-        labeled_loader = torch.utils.data.DataLoader(self.labeled_train_data, batch_size=args.batch_size, shuffle=True,
-                                                     **kwargs)
-        unlabeled_loader = torch.utils.data.DataLoader(self.unlabeled_train_data, batch_size=args.batch_size,
+        labeled_loader = torch.utils.data.DataLoader(self.labeled_train_data, batch_size=self.args.batch_size, shuffle=True,
+                                                     **self.kwargs)
+        unlabeled_loader = torch.utils.data.DataLoader(self.unlabeled_train_data, batch_size=self.args.batch_size,
                                                        shuffle=True,
-                                                       **kwargs)
+                                                       **self.kwargs)
         test_loader = torch.utils.data.DataLoader(
             self.test_data,
-            batch_size=1000, shuffle=True, **kwargs)
+            batch_size=1000, shuffle=True, **self.kwargs)
         return {'labeled': labeled_loader, 'unlabeled': unlabeled_loader, 'test': test_loader}
