@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Constrastive Learning Experiment')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
@@ -55,8 +55,8 @@ labeled_train_data,unlabeled_train_data = torch.utils.data.random_split(train_da
 unlabeled_train_data = UnlabeledDataset(unlabeled_train_data)
 
 # Get data loaders
-labeled_loader = torch.utils.data.DataLoader(labeled_train_data,batch_size=1000,shuffle=True,**kwargs)
-unlabeled_loader = torch.utils.data.DataLoader(unlabeled_train_data,batch_size=1000,shuffle=True,**kwargs)
+labeled_loader = torch.utils.data.DataLoader(labeled_train_data,batch_size=args.batch_size,shuffle=True,**kwargs)
+unlabeled_loader = torch.utils.data.DataLoader(unlabeled_train_data,batch_size=args.batch_size,shuffle=True,**kwargs)
 test_loader = torch.utils.data.DataLoader(
     datasets.MNIST(args.data_dir, train=False, transform=transforms.Compose([
                        transforms.ToTensor(),
