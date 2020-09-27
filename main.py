@@ -1,8 +1,6 @@
 import torch
 import argparse
-from torchvision import datasets, transforms
-import math
-from torch.utils.data import Dataset, DataLoader
+from contrastive_data import ContrastiveData
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Constrastive Learning Experiment')
@@ -30,36 +28,6 @@ print('\n')
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-# simple class that takes a dataset and strips its labels
-class UnlabeledDataset(Dataset):
-    def __init__(self,input_dataset):
-        self.input_dataset = input_dataset
+data = ContrastiveData()
+data_loaders = ContrastiveData.get_data_loaders()
 
-    def __len__(self):
-
-        return len(self.input_dataset)
-
-    def __getitem__(self,idx):
-        item,label = self.input_dataset.__getitem__(idx)
-        return item
-
-# Import train data
-train_data = datasets.MNIST(args.data_dir, train=True,download = True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ]))
-
-# split into labeled and unlabled training sets
-labeled_train_data,unlabeled_train_data = torch.utils.data.random_split(train_data,[math.floor(args.frac_labeled*len(train_data)),math.floor((1-args.frac_labeled)*len(train_data))])
-unlabeled_train_data = UnlabeledDataset(unlabeled_train_data)
-
-# Get data loaders
-labeled_loader = torch.utils.data.DataLoader(labeled_train_data,batch_size=args.batch_size,shuffle=True,**kwargs)
-unlabeled_loader = torch.utils.data.DataLoader(unlabeled_train_data,batch_size=args.batch_size,shuffle=True,**kwargs)
-test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST(args.data_dir, train=False, transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ])),
-    batch_size=1000, shuffle=True, **kwargs)
