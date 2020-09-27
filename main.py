@@ -1,6 +1,8 @@
 import torch
 import argparse
-from contrastive_data import ContrastiveData
+
+from data_processing.contrastive_data import ContrastiveData
+
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Constrastive Learning Experiment')
@@ -28,6 +30,9 @@ print('\n')
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-data = ContrastiveData()
-data_loaders = ContrastiveData.get_data_loaders()
+data = ContrastiveData(args, **kwargs)
+data_loaders = data.get_data_loaders()
+
+print(data)
+print(data_loaders)
 
