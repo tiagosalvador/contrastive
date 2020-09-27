@@ -4,8 +4,6 @@ from torchvision import datasets, transforms
 import math
 from torch.utils.data import Dataset, DataLoader
 
-
-
 # Parse arguments
 parser = argparse.ArgumentParser(description='Constrastive Learning Experiment')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -52,7 +50,7 @@ train_data = datasets.MNIST(args.data_dir, train=True,download = True,
                        transforms.Normalize((0.1307,), (0.3081,))
                    ]))
 
-# split into train and test datasets
+# split into labeled and unlabled training sets
 labeled_train_data,unlabeled_train_data = torch.utils.data.random_split(train_data,[math.floor(args.frac_labeled*len(train_data)),math.floor((1-args.frac_labeled)*len(train_data))])
 unlabeled_train_data = UnlabeledDataset(unlabeled_train_data)
 
