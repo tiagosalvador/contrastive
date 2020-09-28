@@ -1,6 +1,5 @@
 import torch
 import argparse
-
 from data_processing.contrastive_data import ContrastiveData
 
 
@@ -30,9 +29,8 @@ print('\n')
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-data = ContrastiveData(args, **kwargs)
+data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir, **kwargs)
 data_loaders = data.get_data_loaders()
 
 print(data)
 print(data_loaders)
-

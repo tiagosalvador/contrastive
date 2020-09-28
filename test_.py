@@ -26,16 +26,15 @@ args.cuda =  torch.cuda.is_available()
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 
-
 ''' Testing functions below here '''
 
 def test_labelsStripped():
     '''If the labels are stripped, the first element '''
-    dataLoaders = ContrastiveData(args, **kwargs).get_data_loaders()
+    dataLoaders = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir, **kwargs).get_data_loaders()
     test= iter(dataLoaders['unlabeled'])
     assert (type(next(test)) is not list), 'The labels were not stripped off'
 
 def test_badData():
     with pytest.raises(ValueError) as context:
-        dataLoaders = ContrastiveData(args,dataset_name = '!@##$$)*^!^@##@****!!@GDTGENOTADATASET', **kwargs)
+        dataLoaders = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = '!@##$$)*^!^@##@****!!@GDTGENOTADATASET', **kwargs)
     assert  "Dataset name is not supported" in str(context)
