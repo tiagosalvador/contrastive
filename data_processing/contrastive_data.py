@@ -6,20 +6,6 @@ from torch.utils.data import Dataset
 from torchvision import datasets, transforms
 
 
-class UnlabeledDataset(Dataset):
-    '''simple class that takes a dataset and strips its labels'''
-
-    def __init__(self, input_dataset: Dataset):
-        self.input_dataset = input_dataset
-
-    def __len__(self):
-        return len(self.input_dataset)
-
-    def __getitem__(self, idx:int):
-        item, label = self.input_dataset.__getitem__(idx)
-        return item
-
-
 class ContrastiveData:
     '''Takes care of data for contrastive purposes'''
 
@@ -42,6 +28,9 @@ class ContrastiveData:
                 transforms.ToTensor(),
                 transforms.Normalize((0.1307,), (0.3081,))
             ]))
+        elif dataset_name == "Projection":
+            train_data = ProjectionData(self.data_directory,train = True)
+            test_data = ProjectionData(self.data_directory,train = False)
         else:
             raise ValueError("Dataset name is not supported")
 
@@ -66,23 +55,83 @@ class ContrastiveData:
         return {'labeled': labeled_loader, 'unlabeled': unlabeled_loader, 'test': test_loader}
 
 
+
+class UnlabeledDataset(Dataset):
+    '''simple class that takes a dataset and strips its labels'''
+
+    def __init__(self, input_dataset: Dataset):
+        self.input_dataset = input_dataset
+
+    def __len__(self):
+        return len(self.input_dataset)
+
+    def __getitem__(self, idx:int):
+        item, label = self.input_dataset.__getitem__(idx)
+        return item
+
 class ProjectionData(Dataset):
     ''' Toy dataset with data seperated into [x,y] where x is perfectly clustered and y is noise
         Projection refers to optimal map to learn, which is a projection onto x
     '''
-
-    def __init__(self,root:str,train: bool = True,num_clusters: int = 5):
+    def __init__(self,root:str, train: bool = True,num_clusters: int = 5):
+        self.train = train
+        self.root = root
+        self.num_clusters = num_clusters
+        self.datafolder = os.path.join(self.root,'projdata')
+        self.training_file = 'training_k{num_clusters}.pt'.format(num_clusters = self.num_clusters)
+        self.test_file = 'test_k{num_clusters}.pt'.format(num_clusters= self.num_clusters)
 
         if not self._check_exists():
             print('Dataset not found: Generating new data')
             self.generate()
 
-    def __getitem__(self,idx:int):
-        return None
 
+        if self.train:
+            data_file = self.training_file
+        else:
+            data_file = self.test_file
+        self.data, self.labels = torch.load(os.path.join(self.datafolder, data_file))
+
+    def __getitem__(self,idx:int):
+        item,label = self.data[idx],self.labels[idx]
+        return item,label
+
+    def __len__(self):
+        return len(self.data)
 
     def _check_exists(self) -> bool:
-        return (os.path.exists(os.path.join(self.processed_folder,
+        return (os.path.exists(os.path.join(self.datafolder,
                                             self.training_file)) and
-                os.path.exists(os.path.join(self.processed_folder,
+                os.path.exists(os.path.join(self.datafolder,
                                             self.test_file)))
+
+
+    def generate(self):
+        ''' generates 60000 training examples and 10000 testing examples with labels'''
+        # TODO Generate labels
+        k = self.num_clusters
+        path = os.path.join(self.datafolder)
+        os.makedirs(path, exist_ok=True)
+
+        samples_per_category = 70000//k
+        eyes = torch.eye(k)
+
+        data = []
+        labels = []
+        for i in range(k): # Generate vectors that are half standard basis half random noise
+            ei = eyes[:,i].repeat(samples_per_category,1)
+            noise = torch.randn([samples_per_category,k])
+
+            labels.append(torch.tensor(i).repeat(samples_per_category,1))
+            data.append(torch.cat((ei,noise),1))
+
+        data = torch.cat(data)
+        labels = torch.cat(labels)
+
+        training_data,test_data = torch.split(data,[60000,len(data) - 60000])
+        training_labels,test_labels = torch.split(labels,[60000,len(data) - 60000])
+
+        with open(os.path.join(self.datafolder, self.training_file), 'wb') as f:
+            torch.save((training_data,training_labels), f)
+        with open(os.path.join(self.datafolder, self.test_file), 'wb') as f:
+            torch.save((test_data,test_labels), f)
