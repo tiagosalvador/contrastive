@@ -43,7 +43,7 @@ def test_loadMNIST():
 
 def test_loadProjection():
     try:
-        dataLoaders = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'Projection', **kwargs).get_data_loaders()
+        dataLoaders = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'Projection',num_clusters=2, **kwargs).get_data_loaders()
     except Exception:
         print(traceback.print_exc())
         pytest.fail("Loading ProjectionDataset failed")
@@ -61,5 +61,3 @@ def test_genProjectionData():
     item, label = data.__getitem__(0)
     shutil.rmtree(path)  # Removes directory to force data generation
     assert label == 0, 'Couldn\'t generate ProjectionData'
-
-test_loadProjection()

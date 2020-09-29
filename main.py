@@ -1,5 +1,6 @@
 import torch
 import argparse
+import matplotlib.pyplot as plot
 from data_processing.contrastive_data import ContrastiveData
 
 
@@ -15,8 +16,8 @@ parser.add_argument('--dropout', type=float, default=0.25, metavar='P',
                     help='dropout probability (default: 0.25)')
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='heavy ball momentum in gradient descent (default: 0.9)')
-parser.add_argument('--frac-labeled', type=float, default=0.99, metavar='FL',
-                    help='Fraction of labeled data (default 0.99))')
+parser.add_argument('--frac-labeled', type=float, default=0.01, metavar='FL',
+                    help='Fraction of labeled data (default 0.01))')
 parser.add_argument('--data-dir', type=str, default='./data',metavar='DIR')
 args = parser.parse_args()
 args.cuda =  torch.cuda.is_available()
@@ -29,7 +30,7 @@ print('\n')
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir, **kwargs)
+data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'Projection',num_clusters = 2, **kwargs)
 data_loaders = data.get_data_loaders()
 
 print(data)

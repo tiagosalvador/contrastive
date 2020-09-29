@@ -9,12 +9,13 @@ from torchvision import datasets, transforms
 class ContrastiveData:
     '''Takes care of data for contrastive purposes'''
 
-    def __init__(self, batch_size,fraction_labeled,data_directory, dataset_name="MNIST", **kwargs):
+    def __init__(self, batch_size,fraction_labeled,data_directory, dataset_name="MNIST",num_clusters=5, **kwargs):
         # Import train data
         self.batch_size = batch_size
         self.fraction_labeled = fraction_labeled
         self.data_directory = data_directory
         self.kwargs = kwargs
+        self.num_clusters = num_clusters
         train_data = None
         test_data = None
         if dataset_name == "MNIST":
@@ -29,8 +30,8 @@ class ContrastiveData:
                 transforms.Normalize((0.1307,), (0.3081,))
             ]))
         elif dataset_name == "Projection":
-            train_data = ProjectionData(self.data_directory,train = True)
-            test_data = ProjectionData(self.data_directory,train = False)
+            train_data = ProjectionData(self.data_directory,train = True,num_clusters=self.num_clusters)
+            test_data = ProjectionData(self.data_directory,train = False,num_clusters=self.num_clusters)
         else:
             raise ValueError("Dataset name is not supported")
 
