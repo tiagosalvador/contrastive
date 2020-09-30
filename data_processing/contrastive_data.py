@@ -123,12 +123,13 @@ class ProjectionData(Dataset):
             ei = eyes[:,i].repeat(samples_per_category,1)
             noise = torch.randn([samples_per_category,k])
 
-            labels.append(torch.tensor(i).repeat(samples_per_category,1))
+            one_label = torch.cat((eyes[:,i],torch.zeros(k)))
+            labels.append(one_label.repeat(samples_per_category,1))
             data.append(torch.cat((ei,noise),1))
+
 
         data = torch.cat(data)
         labels = torch.cat(labels)
-
         training_data,test_data = torch.split(data,[60000,len(data) - 60000])
         training_labels,test_labels = torch.split(labels,[60000,len(data) - 60000])
 

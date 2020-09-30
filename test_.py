@@ -60,4 +60,4 @@ def test_genProjectionData():
     data = ProjectionData(path,train = True,num_clusters=10)
     item, label = data.__getitem__(0)
     shutil.rmtree(path)  # Removes directory to force data generation
-    assert label == 0, 'Couldn\'t generate ProjectionData'
+    assert label.size() == item.size(), 'Couldn\'t generate ProjectionData'

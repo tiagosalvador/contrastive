@@ -2,7 +2,7 @@ import torch
 import argparse
 import matplotlib.pyplot as plot
 from data_processing.contrastive_data import ContrastiveData
-
+import torch.nn as nn
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Constrastive Learning Experiment')
@@ -30,8 +30,23 @@ print('\n')
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'Projection',num_clusters = 2, **kwargs)
-data_loaders = data.get_data_loaders()
+### Let's define the simplest network I can
+class SimpleNet(nn.Module):
 
-print(data)
-print(data_loaders)
+    def __init__(self,num_clusters):
+        super(SimpleNet,self).__init__()
+        self.num_clusters = num_clusters
+
+    def forward(self,x): # No activation function, just one map of weights
+        net = nn.Sequential(
+            nn.Linear(2*num_clusters,2*num_clusters)
+        )
+
+        return net(x)
+
+def SemiSupervisedLoss(labeled_estimate,target,unlabled_input = None,unlabled_centers = None):
+    return None
+
+num_clusters = 2
+data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'Projection',num_clusters = num_clusters, **kwargs)
+data_loaders = data.get_data_loaders()
