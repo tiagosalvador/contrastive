@@ -76,7 +76,7 @@ if args.cuda:
     model.cuda()
     centers.cuda()
 
-def train(epoch):
+def train(epoch,centers):
     model.train()
     # Train on labeled data first
     for batch_ix, (data, target) in enumerate(data_loaders['labeled']):
@@ -94,7 +94,7 @@ def train(epoch):
 
     for batch_ix,(data) in enumerate(data_loaders['unlabeled']):
         if args.cuda:
-            data,centers= data.cuda(),centers.cuda()
+            data,centers = data.cuda(),centers.cuda()
         optimizer.zero_grad()
         output = model(data)
         loss = loss_function(output,returnClosestCenter(centers,data))
