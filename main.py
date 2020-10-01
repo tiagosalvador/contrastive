@@ -111,9 +111,8 @@ def test():
             if args.cuda:
                 data, target = data.cuda(), target.cuda()
             output = model(data)
-            loss = loss_function(output, target)
-            print(loss)
-            test_loss.add(loss)
+            loss = loss_function(output, target)            
+            test_loss.add(loss.cpu())
 
     print('[Epoch %2d] Average test loss: %.5f'
         %(epoch, test_loss.value()[0]))
