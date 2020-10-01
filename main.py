@@ -20,6 +20,8 @@ parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='heavy ball momentum in gradient descent (default: 0.9)')
 parser.add_argument('--frac-labeled', type=float, default=0.01, metavar='FL',
                     help='Fraction of labeled data (default 0.01))')
+parser.add_argument('--num-clusters', type=int, default=5, metavar='NC',
+                    help='Number of clusters to expect')
 parser.add_argument('--data-dir', type=str, default='./data',metavar='DIR')
 args = parser.parse_args()
 args.cuda =  torch.cuda.is_available()
@@ -60,7 +62,7 @@ class SimpleNet(nn.Module): #  With Projection data we should see the identity m
 loss_function = torch.nn.MSELoss()
 
 
-num_clusters = 2
+num_clusters = args.num_clusters
 eye = torch.eye(2*num_clusters,2*num_clusters)
 centers = eye[0:num_clusters,:]
 
