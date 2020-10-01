@@ -10,7 +10,7 @@ import torchnet as tnt
 parser = argparse.ArgumentParser(description='Constrastive Learning Experiment')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
@@ -56,8 +56,8 @@ class SimpleNet(nn.Module): #  With Projection data we should see the identity m
     def forward(self,x): # No activation function, just one map of weights.
         return self.net(x)
 
-def distanceLoss(labeled_ouput,labeled_centers):
-    return torch.sum((labeled_ouput - labeled_centers)**2)
+
+loss_function = torch.nn.MSELoss()
 
 
 num_clusters = 2
@@ -82,7 +82,7 @@ def train(epoch):
 
         optimizer.zero_grad()
         output = model(data)
-        loss = distanceLoss(output, target)
+        loss = loss_function(output, target)
         loss.backward()
         optimizer.step()
         if batch_ix % 100 == 0 and batch_ix>0:
@@ -94,9 +94,10 @@ def train(epoch):
             data= data.cuda()
         optimizer.zero_grad()
         output = model(data)
-        loss = distanceLoss(data,returnClosestCenter(centers,data))
+        loss = loss_function(output,returnClosestCenter(centers,data))
         loss.backward()
         optimizer.step()
+
 
 
 def test():
@@ -108,10 +109,22 @@ def test():
             if args.cuda:
                 data, target = data.cuda(), target.cuda()
             output = model(data)
-            loss = distanceLoss(output, target)
+            loss = loss_function(output, target)
             print(loss)
 
 if __name__=="__main__":
     for epoch in range(1, args.epochs + 1):
         train(epoch)
         test()
+
+## Nice to visualize that the model is learning the projection
+pointTest = torch.clone(centers)
+pointTest[:,num_clusters:] = torch.rand([num_clusters,num_clusters])
+
+print(pointTest)
+with torch.no_grad():
+    print(model(pointTest))
+
+lin_weights = model.net[0].weight
+print(lin_weights)  # Very interesting how it didn't learn the standard projection matrix
+print(torch.sum(lin_weights,0))
