@@ -74,6 +74,7 @@ optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum = args.momentum)
 
 if args.cuda:
     model.cuda()
+    centers.cuda()
 
 def train(epoch):
     model.train()
