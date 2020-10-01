@@ -111,7 +111,7 @@ def test():
             if args.cuda:
                 data, target = data.cuda(), target.cuda()
             output = model(data)
-            loss = loss_function(output, target)            
+            loss = loss_function(output, target)
             test_loss.add(loss.cpu())
 
     print('[Epoch %2d] Average test loss: %.5f'
@@ -122,6 +122,6 @@ if __name__=="__main__":
         train(epoch,centers)
         test()
 
-lin_weights = model.net[0].weight
-print(lin_weights)  # Very interesting how it didn't learn the standard projection matrix
-print(torch.sum(lin_weights,0))
+# lin_weights = model.net[0].weight
+# print(lin_weights)  # Very interesting how it didn't learn the standard projection matrix
+# print(torch.sum(lin_weights,0))
