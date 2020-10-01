@@ -94,7 +94,7 @@ def train(epoch):
 
     for batch_ix,(data) in enumerate(data_loaders['unlabeled']):
         if args.cuda:
-            data= data.cuda()
+            data,centers= data.cuda(),centers.cuda()
         optimizer.zero_grad()
         output = model(data)
         loss = loss_function(output,returnClosestCenter(centers,data))
@@ -110,7 +110,7 @@ def test():
     with torch.no_grad():
         for data, target in data_loaders['test']:
             if args.cuda:
-                data, target,centers = data.cuda(), target.cuda(),centers.cuda()
+                data, target = data.cuda(), target.cuda()
             output = model(data)
             loss = loss_function(output, target)
             print(loss)
