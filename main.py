@@ -106,7 +106,6 @@ def train(epoch,centers):
 def test():
     model.eval()
     test_loss = tnt.meter.AverageValueMeter()
-    top1 = tnt.meter.ClassErrorMeter()
     with torch.no_grad():
         for data, target in data_loaders['test']:
             if args.cuda:
@@ -114,19 +113,15 @@ def test():
             output = model(data)
             loss = loss_function(output, target)
             print(loss)
+            test_loss.add(loss)
+
+    print('[Epoch %2d] Average test loss: %.5f'
+        %(epoch, test_loss.value()[0]))
 
 if __name__=="__main__":
     for epoch in range(1, args.epochs + 1):
         train(epoch,centers)
         test()
-
-## Nice to visualize that the model is learning the projection
-pointTest = torch.clone(centers)
-pointTest[:,num_clusters:] = torch.rand([num_clusters,num_clusters])
-
-print(pointTest)
-with torch.no_grad():
-    print(model(pointTest))
 
 lin_weights = model.net[0].weight
 print(lin_weights)  # Very interesting how it didn't learn the standard projection matrix
