@@ -117,7 +117,7 @@ def test():
 
 if __name__=="__main__":
     for epoch in range(1, args.epochs + 1):
-        train(epoch)
+        train(epoch,centers)
         test()
 
 ## Nice to visualize that the model is learning the projection
