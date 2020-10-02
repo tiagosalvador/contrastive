@@ -9,9 +9,10 @@ from torchvision import datasets, transforms
 class ContrastiveData:
     '''Takes care of data for contrastive purposes'''
 
-    def __init__(self, batch_size,fraction_labeled,data_directory, dataset_name="MNIST",num_clusters=5, **kwargs):
+    def __init__(self,fraction_labeled,data_directory,batch_size_labeled = 32, batch_size_unlabeled=32, dataset_name="MNIST",num_clusters=5, **kwargs):
         # Import train data
-        self.batch_size = batch_size
+        self.batch_size_labeled = batch_size_labeled
+        self.batch_size_unlabeled = batch_size_unlabeled
         self.fraction_labeled = fraction_labeled
         self.data_directory = data_directory
         self.kwargs = kwargs
@@ -45,9 +46,9 @@ class ContrastiveData:
     def get_data_loaders(self):
         '''Get data loaders'''
 
-        labeled_loader = torch.utils.data.DataLoader(self.labeled_train_data, batch_size=self.batch_size, shuffle=True,
+        labeled_loader = torch.utils.data.DataLoader(self.labeled_train_data, batch_size=self.batch_size_labeled, shuffle=True,
                                                      **self.kwargs)
-        unlabeled_loader = torch.utils.data.DataLoader(self.unlabeled_train_data, batch_size=self.batch_size,
+        unlabeled_loader = torch.utils.data.DataLoader(self.unlabeled_train_data, batch_size=self.batch_size_unlabeled,
                                                        shuffle=True,
                                                        **self.kwargs)
         test_loader = torch.utils.data.DataLoader(
