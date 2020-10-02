@@ -23,8 +23,7 @@ class ContrastiveData:
                                         transform=transforms.Compose([
                                             transforms.ToTensor(),
                                             transforms.Normalize((0.1307,), (0.3081,))
-                                            # Where do these numbers come from?
-                                        ]))
+                                        ]))            
             test_data = datasets.MNIST(self.data_directory, train=False, transform=transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.1307,), (0.3081,))
@@ -54,6 +53,10 @@ class ContrastiveData:
             self.test_data,
             batch_size=1000, shuffle=True, **self.kwargs)
         return {'labeled': labeled_loader, 'unlabeled': unlabeled_loader, 'test': test_loader}
+
+    def getItemSize(self):
+        data,label = self.labeled_train_data.__getitem__(0)
+        return data.size()
 
 
 

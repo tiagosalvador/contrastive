@@ -22,9 +22,13 @@ parser.add_argument('--frac-labeled', type=float, default=0.01, metavar='FL',
                     help='Fraction of labeled data (default 0.01))')
 parser.add_argument('--num-clusters', type=int, default=5, metavar='NC',
                     help='Number of clusters to expect')
+parser.add_argument('--dataset', type=str, default='Projection', metavar='DAT',
+                    help='What dataset to use')
 parser.add_argument('--data-dir', type=str, default='./data',metavar='DIR')
 args = parser.parse_args()
 args.cuda =  torch.cuda.is_available()
+if args.dataset == 'MNIST':
+    args.num_clusters = 10
 
 # Print out arguments to the log
 print('Constrastive Learning Run')
@@ -48,29 +52,30 @@ def returnClosestCenter(centers,points):
 ### Let's define the simplest network I can
 class SimpleNet(nn.Module): #  With Projection data we should see the identity map from R^n to R^N/2
 
-    def __init__(self,num_clusters):
+    def __init__(self,inputsize,outputsize):
         super(SimpleNet,self).__init__()
-        self.num_clusters = num_clusters
+        self.inputsize = inputsize
+        self.out = outputsize
         self.net = nn.Sequential(
-            nn.Linear(2*num_clusters,2*num_clusters,bias=False)
+            nn.Linear(inputsize,outputsize,bias=False)
         )
 
     def forward(self,x): # No activation function, just one map of weights.
         return self.net(x)
 
-
-loss_function = torch.nn.MSELoss()
-
-
-num_clusters = args.num_clusters
-eye = torch.eye(2*num_clusters,2*num_clusters)
-centers = eye[0:num_clusters,:]
-
-data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'Projection',num_clusters = num_clusters, **kwargs)
+# Get data
+eye = torch.eye(2*args.num_clusters,2*args.num_clusters)
+centers = eye[0:args.num_clusters,:]
+data = ContrastiveData(args.batch_size,args.frac_labeled,args.data_dir,dataset_name = 'MNIST',num_clusters = args.num_clusters, **kwargs)
 data_loaders = data.get_data_loaders()
 
-model = SimpleNet(num_clusters)
+size = data.getItemSize()
+print(size[0])
+print(size[1])
+# Setup model and trainers
+model = SimpleNet(args.num_clusters)
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum = args.momentum)
+loss_function = torch.nn.MSELoss()
 
 if args.cuda:
     model.cuda()
@@ -121,15 +126,15 @@ if __name__=="__main__":
     for epoch in range(1, args.epochs + 1):
         train(epoch,centers)
         test()
-    # with torch.no_grad():
-    #     # print('Initial Model Weights')
-    #     # print(initial_weights.t())
-    #     # lin_weights = model.net[0].weight
-    #     # print('Trained Model Weights')
-    #     # print(lin_weights.t())  # Very interesting how it didn't learn the standard projection matrix
-    #     testPoint = centers[0,:].clone() + torch.cat((torch.zeros(num_clusters),torch.randn(num_clusters)))
-    #     print('Testing point to evaluate')
-    #     print(testPoint)
-    #     print('Model\'s Prediction')
-    #     print(model(testPoint))
+    with torch.no_grad():
+        # print('Initial Model Weights')
+        # print(initial_weights.t())
+        lin_weights = model.net[0].weight
+        print('Trained Model Weights')
+        print(lin_weights.t())
+        testPoint = centers[0,:].clone() + torch.cat((torch.zeros(args.num_clusters),torch.randn(args.num_clusters)))
+        print('Testing point to evaluate')
+        print(testPoint)
+        print('Model\'s Prediction')
+        print(model(testPoint))
         #print(torch.sum(lin_weights,0))
