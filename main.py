@@ -52,7 +52,7 @@ class SimpleNet(nn.Module): #  With Projection data we should see the identity m
         super(SimpleNet,self).__init__()
         self.num_clusters = num_clusters
         self.net = nn.Sequential(
-            nn.Linear(2*num_clusters,2*num_clusters)
+            nn.Linear(2*num_clusters,2*num_clusters,bias=False)
         )
 
     def forward(self,x): # No activation function, just one map of weights.
@@ -102,7 +102,7 @@ def train(epoch,centers):
         optimizer.step()
 
 
-
+initial_weights = model.net[0].weight.clone()
 def test():
     model.eval()
     test_loss = tnt.meter.AverageValueMeter()
@@ -121,7 +121,15 @@ if __name__=="__main__":
     for epoch in range(1, args.epochs + 1):
         train(epoch,centers)
         test()
-
-# lin_weights = model.net[0].weight
-# print(lin_weights)  # Very interesting how it didn't learn the standard projection matrix
-# print(torch.sum(lin_weights,0))
+    # with torch.no_grad():
+    #     # print('Initial Model Weights')
+    #     # print(initial_weights.t())
+    #     # lin_weights = model.net[0].weight
+    #     # print('Trained Model Weights')
+    #     # print(lin_weights.t())  # Very interesting how it didn't learn the standard projection matrix
+    #     testPoint = centers[0,:].clone() + torch.cat((torch.zeros(num_clusters),torch.randn(num_clusters)))
+    #     print('Testing point to evaluate')
+    #     print(testPoint)
+    #     print('Model\'s Prediction')
+    #     print(model(testPoint))
+        #print(torch.sum(lin_weights,0))
