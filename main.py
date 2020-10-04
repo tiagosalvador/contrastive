@@ -1,10 +1,10 @@
 import argparse
-
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchnet as tnt
-
+from data_processing.utils import *
 from data_processing import cycle_no_memory
 from data_processing.contrastive_data import ContrastiveData
 
@@ -18,13 +18,13 @@ parser.add_argument('--batch-size-unlabeled', type=int, default=8, metavar='NU',
 
 parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='number of epochs to train (default: 10)')
-parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
+parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--dropout', type=float, default=0.25, metavar='P',
                     help='dropout probability (default: 0.25)')
 parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                     help='heavy ball momentum in gradient descent (default: 0.9)')
-parser.add_argument('--frac-labeled', type=float, default=0.01, metavar='FL',
+parser.add_argument('--frac-labeled', type=float, default=0.1, metavar='FL',
                     help='Fraction of labeled data (default 0.01))')
 parser.add_argument('--num-clusters', type=int, default=5, metavar='NC',
                     help='Number of clusters to expect')
@@ -83,6 +83,7 @@ data = ContrastiveData(args.frac_labeled, args.data_dir,batch_size_labeled=args.
                        num_clusters=num_clusters, **kwargs)
 data_loaders = data.get_data_loaders()
 
+
 model = SimpleNet(num_clusters)
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
@@ -98,10 +99,11 @@ def train_jointly(epoch, centers, loss_function=None, **kwargs):
     # We loop over all batches in the (bigger) unlabeled set. While we do so we loop also on the labeled data, starting over if necessary.
     # This means that unlabeled data may be present many times in the same epoch.
     # The number of times that the labeled data is processed is dependent on the batch size of the labeled data.
-    for batch_ix, (unlabeled_features, (labeled_features, labels)) in enumerate(
-            zip(data_loaders['unlabeled'], data_loaders['labeled'])):
-        #if args.cuda:
-        #    unlabeled_features, labeled_features, labels, centers = unlabeled_features.cuda(), labeled_features.cuda(), labels.cuda(), centers.cuda()
+    #for batch_ix, unlabeled_features in enumerate(data_loaders['unlabeled']):
+    for batch_ix, (unlabeled_features, (labeled_features, labels)) in enumerate(cycle_with(leader=data_loaders['unlabeled'], follower=data_loaders['labeled'])):
+        pass
+        if args.cuda:
+            unlabeled_features, labeled_features, labels, centers = unlabeled_features.cuda(), labeled_features.cuda(), labels.cuda(), centers.cuda()
 
         labeled_output = model(labeled_features)
         unlabeled_output = model(unlabeled_features)
@@ -114,6 +116,14 @@ def train_jointly(epoch, centers, loss_function=None, **kwargs):
             print('[Epoch %2d, batch %3d] training loss: %.4f' %
                   (epoch, batch_ix, loss))
 
+    #print(time.time()- t0)
+    #t0 = time.time()
+    #for batch_ix, elt in enumerate(data_loaders['unlabeled']):
+    #    pass
+    #for batch_ix, elt in enumerate(data_loaders['labeled']):
+    #    pass
+    #print(time.time() - t0)
+    #print("end")
 
 def basic_loss(unlabeled_output, labeled_output, labels, centers):
     return MSELoss(labeled_output, labels) + MSELoss(unlabeled_output, returnClosestCenter(centers, unlabeled_output))
@@ -130,9 +140,9 @@ def train(epoch, centers):
         loss = loss_function(output, target)
         loss.backward()
         optimizer.step()
-        if batch_ix % 100 == 0 and batch_ix > 0:
-            print('[Epoch %2d, batch %3d] training loss: %.4f' %
-                  (epoch, batch_ix, loss.data[0]))
+        #if batch_ix % 100 == 0 and batch_ix > 0:
+        #    print('[Epoch %2d, batch %3d] training loss: %.4f' %
+        #          (epoch, batch_ix, loss.data[0]))
 
     for batch_ix, (data) in enumerate(data_loaders['unlabeled']):
         if args.cuda:
@@ -163,10 +173,18 @@ def test():
 
 
 if __name__ == "__main__":
+
+
+
     for epoch in range(1, args.epochs + 1):
+
+        #t0 = time.time()
         #train(epoch, centers)
+        #print(time.time() - t0)
+        t0 = time.time()
         train_jointly(epoch, centers, loss_function=basic_loss)
-        test()
+        print(time.time() - t0)
+        #test()
     # with torch.no_grad():
     #     # print('Initial Model Weights')
     #     # print(initial_weights.t())

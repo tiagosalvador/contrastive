@@ -85,7 +85,7 @@ class ProjectionData(Dataset):
 
         if not self._check_exists():
             print('Dataset not found: Generating new data')
-            self.generate()
+            self.generate(60000, 10000)
 
 
         if self.train:
@@ -108,14 +108,14 @@ class ProjectionData(Dataset):
                                             self.test_file)))
 
 
-    def generate(self):
+    def generate(self, num_train_samples, num_test_samples):
         ''' generates 60000 training examples and 10000 testing examples with labels'''
         # TODO Generate labels
         k = self.num_clusters
         path = os.path.join(self.datafolder)
         os.makedirs(path, exist_ok=True)
 
-        samples_per_category = 70000//k
+        samples_per_category = (num_train_samples + num_test_samples)//k
         eyes = torch.eye(k)
 
         data = []
@@ -131,8 +131,8 @@ class ProjectionData(Dataset):
 
         data = torch.cat(data)
         labels = torch.cat(labels)
-        training_data,test_data = torch.split(data,[60000,len(data) - 60000])
-        training_labels,test_labels = torch.split(labels,[60000,len(data) - 60000])
+        training_data,test_data = torch.split(data,[num_train_samples,len(data) - num_train_samples])
+        training_labels,test_labels = torch.split(labels,[num_train_samples,len(data) - num_train_samples])
 
         with open(os.path.join(self.datafolder, self.training_file), 'wb') as f:
             torch.save((training_data,training_labels), f)
